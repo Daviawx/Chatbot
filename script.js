@@ -1,4 +1,4 @@
-// script.js – Todas as funcionalidades avançadas com OpenRouter (gratuito)
+// script.js – Todas as funcionalidades avançadas com OpenRouter (gratuito) - Modelo Gemma 3 27B
 
 document.addEventListener('DOMContentLoaded', () => {
     // ---------- ELEMENTOS DO DOM ----------
@@ -12,15 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsBar = document.getElementById('suggestionsBar');
 
     // ---------- CONFIGURAÇÃO DA API (OPENROUTER) ----------
-    // 🔑 CHAVE FORNECIDA PELO USUÁRIO (NÃO COMPARTILHE)
-    const API_KEY = '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';
+    // 🔑 NOVA CHAVE FORNECIDA
+    const API_KEY = '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';
     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
     
-    // Modelos gratuitos disponíveis no OpenRouter (em 2026)
-    const MODELS = {
-        fast: 'deepseek/deepseek-r1:free',       // Rápido e bom para código
-        pro: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free' // Mais poderoso
-    };
+    // Modelo gratuito escolhido: google/gemma-3-27b-it:free
+    // (usaremos o mesmo modelo para ambos os modos, mas com parâmetros diferentes)
+    const MODEL = 'google/gemma-3-27b-it:free';
 
     // ---------- ESTADO GLOBAL ----------
     let messages = []; // array completo do histórico (formato OpenAI)
@@ -41,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addWelcomeMessage() {
-        const welcome = "Olá! Sou **DevAssist**, seu assistente gratuito de programação. Estou usando modelos de IA de código aberto via OpenRouter. Como posso ajudá-lo hoje?";
+        const welcome = "Olá! Sou **DevAssist**, rodando com o modelo gratuito **Gemma 3 27B** via OpenRouter. Como posso ajudar com programação hoje?";
         addMessageToChat(welcome, 'bot');
         messages.push({ role: 'assistant', content: welcome });
         saveHistory();
@@ -152,12 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
             { role: 'user', content: userMessage }
         ];
 
-        const model = MODELS[currentMode]; // usa modelo conforme modo
+        // Parâmetros diferentes para cada modo (mesmo modelo)
         const temperature = currentMode === 'pro' ? 0.8 : 0.5;
         const maxTokens = currentMode === 'pro' ? 1200 : 600;
 
         const requestBody = {
-            model: model,
+            model: MODEL,            // mesmo modelo para ambos os modos
             messages: messagesToSend,
             temperature: temperature,
             max_tokens: maxTokens
