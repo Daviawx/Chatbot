@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsBar = document.getElementById('suggestionsBar');
 
     // ---------- CONFIGURAÇÃO DA API ----------
-    const API_KEY = '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';
+    const API_KEY = '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';
     const API_URL = 'https://api.openai.com/v1/chat/completions';
 
     // ---------- ESTADO GLOBAL ----------
