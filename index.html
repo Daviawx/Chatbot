@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Chatbot Moderno</title>
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <h2>Assistente IA</h2>
+            <span class="status">online</span>
+        </header>
+
+        <main class="chat-messages" id="chatMessages">
+            <!-- Mensagem de boas-vindas do bot -->
+            <div class="message bot-message">
+                Olá! Como posso ajudá-lo hoje?
+            </div>
+        </main>
+
+        <footer class="chat-footer">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off">
+                <button id="sendButton" aria-label="Enviar mensagem">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
