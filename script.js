@@ -1,4 +1,4 @@
-// script.js – Todas as funcionalidades avançadas com OpenRouter (gratuito) - Modelo Gemma 3 27B
+// script.js – Versão corrigida com modelo gratuito confirmado
 
 document.addEventListener('DOMContentLoaded', () => {
     // ---------- ELEMENTOS DO DOM ----------
@@ -12,19 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsBar = document.getElementById('suggestionsBar');
 
     // ---------- CONFIGURAÇÃO DA API (OPENROUTER) ----------
-    // 🔑 NOVA CHAVE FORNECIDA
+    // 🔑 Sua chave (já fornecida)
     const API_KEY = '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';
     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
     
-    // Modelo gratuito escolhido: google/gemma-3-27b-it:free
-    // (usaremos o mesmo modelo para ambos os modos, mas com parâmetros diferentes)
-    const MODEL = 'google/gemma-3-27b-it:free';
+    // ✅ Modelo gratuito CONFIRMADO (DeepSeek R1 Free)
+    const MODEL = 'deepseek/deepseek-r1:free';
 
     // ---------- ESTADO GLOBAL ----------
-    let messages = []; // array completo do histórico (formato OpenAI)
+    let messages = [];
     let isBotTyping = false;
-    let currentMode = 'fast'; // 'fast' ou 'pro'
-    let abortController = null;
+    let currentMode = 'fast';
 
     // ---------- INICIALIZAÇÃO ----------
     function init() {
@@ -39,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addWelcomeMessage() {
-        const welcome = "Olá! Sou **DevAssist**, rodando com o modelo gratuito **Gemma 3 27B** via OpenRouter. Como posso ajudar com programação hoje?";
+        const welcome = "👋 Olá! Sou **DevAssist**, rodando com o modelo gratuito **DeepSeek R1** via OpenRouter. Como posso ajudar com programação hoje?";
         addMessageToChat(welcome, 'bot');
         messages.push({ role: 'assistant', content: welcome });
         saveHistory();
@@ -52,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             messageDiv.innerHTML = parseMarkdown(text);
-            // Aplica highlight nos blocos de código
             messageDiv.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
@@ -64,21 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
-    // Parser markdown simples
     function parseMarkdown(text) {
         let escaped = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        // Blocos de código ```
         escaped = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
             const language = lang || 'plaintext';
             return `<pre><code class="language-${language}">${code.trim()}</code></pre>`;
         });
-        // Código inline `
         escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
-        // Negrito **
         escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-        // Itálico *
         escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        // Quebras de linha
         escaped = escaped.replace(/\n/g, '<br>');
         return escaped;
     }
@@ -91,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---------- HISTÓRICO (LOCALSTORAGE) ----------
+    // ---------- HISTÓRICO ----------
     function saveHistory() {
         localStorage.setItem('chatHistory', JSON.stringify(messages));
     }
@@ -118,12 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---------- ROLAGEM ----------
     function scrollToBottom() {
         chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
     }
 
-    // ---------- INDICADOR DE DIGITAÇÃO ----------
     function showTypingIndicator() {
         const indicator = document.createElement('div');
         indicator.classList.add('message', 'typing-indicator');
@@ -140,28 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---------- CHAMADA À API (OPENROUTER) ----------
     async function fetchBotResponse(userMessage) {
-        // Monta histórico completo
         const messagesToSend = [
             {
                 role: 'system',
-                content: 'Você é um assistente especialista em programação, similar a DeepSeek, Gemini e ChatGPT. Responda dúvidas sobre código, lógica, frameworks, boas práticas, etc. Sempre que possível, forneça exemplos de código bem formatados e explicações claras. Seja amigável e didático. Use markdown para formatar código e texto.'
+                content: 'Você é um assistente especialista em programação. Responda dúvidas sobre código, lógica, frameworks, boas práticas, etc. Sempre que possível, forneça exemplos de código bem formatados e explicações claras. Use markdown.'
             },
             ...messages,
             { role: 'user', content: userMessage }
         ];
 
-        // Parâmetros diferentes para cada modo (mesmo modelo)
         const temperature = currentMode === 'pro' ? 0.8 : 0.5;
         const maxTokens = currentMode === 'pro' ? 1200 : 600;
 
         const requestBody = {
-            model: MODEL,            // mesmo modelo para ambos os modos
+            model: MODEL,
             messages: messagesToSend,
             temperature: temperature,
             max_tokens: maxTokens
         };
-
-        abortController = new AbortController();
 
         try {
             const response = await fetch(API_URL, {
@@ -169,37 +154,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${API_KEY}`,
-                    'HTTP-Referer': window.location.origin, // identificação opcional
-                    'X-Title': 'DevAssist Chat' // nome do seu app
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'DevAssist Chat'
                 },
-                body: JSON.stringify(requestBody),
-                signal: abortController.signal
+                body: JSON.stringify(requestBody)
             });
 
-            if (!response.ok) {
+            // Captura detalhe do erro se houver
+            let errorDetail = '';
+            try {
                 const errorData = await response.json();
-                throw new Error(`Erro ${response.status}: ${errorData.error?.message || 'Desconhecido'}`);
+                errorDetail = errorData.error?.message || JSON.stringify(errorData);
+            } catch (e) {
+                errorDetail = await response.text();
+            }
+
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${errorDetail}`);
             }
 
             const data = await response.json();
-            const reply = data.choices[0].message.content;
-            return reply;
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                return null;
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('Resposta da API em formato inesperado');
             }
+            return data.choices[0].message.content;
+        } catch (error) {
             console.error('Falha na chamada da API:', error);
-            
-            // Fallback amigável para quando a API gratuita falhar (limite, etc.)
-            const fallbacks = [
-                "A API gratuita está temporariamente indisponível. Por favor, tente novamente em alguns instantes.",
-                "Parece que atingimos o limite de requisições gratuitas. Tente novamente mais tarde.",
-                "Desculpe, não consegui me conectar ao modelo de IA agora. Vou usar uma resposta local.",
-                "**Modo offline:** Como fallback, aqui vai uma dica: consulte a documentação oficial da tecnologia que você está usando."
-            ];
-            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        } finally {
-            abortController = null;
+            // Retorna uma mensagem de erro útil
+            return `**❌ Erro na comunicação com a IA:** ${error.message}\n\n**Possíveis causas:**\n- Chave inválida ou expirada\n- Limite de requisições excedido\n- Modelo temporariamente indisponível\n\n**Sugestão:** Tente novamente mais tarde ou verifique sua chave no site do OpenRouter.`;
         }
     }
 
@@ -222,16 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const botReply = await fetchBotResponse(messageText);
             removeTypingIndicator();
-
-            if (botReply !== null) {
-                addMessageToChat(botReply, 'bot');
-                messages.push({ role: 'assistant', content: botReply });
-                saveHistory();
-            }
+            addMessageToChat(botReply, 'bot');
+            messages.push({ role: 'assistant', content: botReply });
+            saveHistory();
         } catch (error) {
             removeTypingIndicator();
-            const errorMsg = `**Erro inesperado:** ${error.message}`;
-            addMessageToChat(errorMsg, 'bot');
+            addMessageToChat(`**Erro inesperado:** ${error.message}`, 'bot');
         } finally {
             userInput.disabled = false;
             sendButton.disabled = false;
@@ -244,8 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setMode(mode) {
         currentMode = mode;
         modeBtns.forEach(btn => {
-            const btnMode = btn.dataset.mode;
-            btn.classList.toggle('active', btnMode === mode);
+            btn.classList.toggle('active', btn.dataset.mode === mode);
         });
         currentModeLabel.textContent = mode === 'pro' ? 'Pro' : 'Fast';
     }
@@ -286,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => setMode(btn.dataset.mode));
     });
 
-    // Inicializa
     init();
     setMode('fast');
 });
